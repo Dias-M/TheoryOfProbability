@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Coin &amp; Dice: a probability project</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#fff7ed;--card:#fff;--ink:#1e293b;--hc:#9a3412;--mut:#475569;--red:#2563eb;--gold:#f97316;--grid:#fed7aa;--on:#fff;--sh:#9a3412;
+--hd:"Outfit","Segoe UI",system-ui,sans-serif;--bd:"Work Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+--r:14px;--shadow:0 1px 2px rgba(154,52,18,.06),0 12px 28px -16px rgba(154,52,18,.32);
+--tint:color-mix(in srgb,var(--gold) 14%,transparent);--tintb:color-mix(in srgb,var(--red) 12%,transparent);
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#0f172a;--card:#1e293b;--ink:#f1f5f9;--hc:#fdba74;--mut:#94a3b8;--red:#60a5fa;--gold:#fb923c;--grid:#334155;--on:#0f172a;--shadow:0 12px 28px -16px rgba(0,0,0,.7)}}
+:root[data-theme="dark"]{--paper:#0f172a;--card:#1e293b;--ink:#f1f5f9;--hc:#fdba74;--mut:#94a3b8;--red:#60a5fa;--gold:#fb923c;--grid:#334155;--on:#0f172a;--shadow:0 12px 28px -16px rgba(0,0,0,.7)}
+html{scroll-padding-top:calc(80px + env(safe-area-inset-top,0px));-webkit-text-size-adjust:100%}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper) radial-gradient(900px 360px at 92% -60px,var(--tint),transparent) no-repeat;color:var(--ink);font:17px/1.65 var(--bd);min-height:100vh}
+a:focus-visible,button:focus-visible,select:focus-visible{outline:3px solid var(--red);outline-offset:2px}
+.skip{position:absolute;left:12px;top:-64px;z-index:10;background:var(--red);color:var(--on);padding:10px 16px;border-radius:8px;font-weight:600;text-decoration:none}
+.skip:focus{top:8px}
+
+/* navigation */
+#top{position:sticky;top:0;z-index:5;background:color-mix(in srgb,var(--card) 92%,transparent);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-bottom:1px solid var(--grid)}
+#nv{display:flex;align-items:center;gap:6px;max-width:1100px;margin:0 auto;padding:6px 16px;overflow-x:auto;scrollbar-width:none}
+#nv::-webkit-scrollbar{display:none}
+#tabs{display:flex;gap:4px}
+.t{display:flex;align-items:center;gap:10px;min-height:44px;margin-right:12px;padding:0;background:none;border:0;border-radius:8px;cursor:pointer;font:700 1.15rem var(--hd);color:var(--hc);white-space:nowrap}
+.t svg{width:30px;height:30px;flex:none}
+.t .c1{fill:var(--gold);stroke:var(--hc);stroke-width:2}
+.t .c2{fill:#fff;stroke:#1e293b;stroke-width:1.6}
+.t .c3{fill:#1e293b}
+.tab{display:flex;align-items:center;gap:8px;min-height:44px;padding:0 14px;background:none;border:0;border-radius:999px;color:var(--mut);font:500 .95rem var(--bd);cursor:pointer;white-space:nowrap;transition:background .2s,color .2s}
+.tab svg{width:20px;height:20px;flex:none}
+.tab:hover{color:var(--ink);background:var(--tint)}
+.tab.on{color:var(--ink);background:var(--tintb);font-weight:600}
+.n{display:grid;place-items:center;width:24px;height:24px;border-radius:50%;border:2px solid currentColor;font:700 .75rem/1 var(--hd)}
+.tab.on .n{background:var(--red);border-color:var(--red);color:var(--on)}
+#pbw{height:3px}
+#pb{display:block;height:100%;width:0;background:var(--gold);transition:width .4s ease}
+
+/* layout + type */
+main{max-width:1040px;margin:0 auto;padding:48px 20px 88px;outline:0}
+.pg{display:none}
+.pg.on{display:block;animation:in .4s ease both}
+@keyframes in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.eyebrow{font:600 .8rem var(--hd);letter-spacing:.12em;text-transform:uppercase;color:var(--red);margin:0 0 12px}
+h1,h2{font-family:var(--hd);font-weight:700;letter-spacing:-.02em;line-height:1.1;margin:0 0 .45em;color:var(--hc)}
+h1{font-size:clamp(2.4rem,6.5vw,4.1rem)}
+h2{font-size:clamp(1.9rem,4.5vw,2.6rem)}
+h3{font:700 1.35rem/1.2 var(--hd);color:var(--hc);margin:38px 0 10px}
+p{max-width:62ch;margin:0 0 1em}
+.lead{font-size:1.2rem;max-width:58ch}
+.mut{color:var(--mut)}
+
+/* surfaces */
+.box{background:var(--card);border:1px solid var(--grid);border-radius:18px;padding:24px;margin:20px 0 28px;box-shadow:var(--shadow)}
+.row{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-bottom:14px}
+select{font:inherit;min-height:44px;padding:8px 12px;border:1px solid var(--mut);background:var(--card);color:var(--ink);border-radius:10px;cursor:pointer}
+button.go,button.ghost{display:inline-flex;align-items:center;justify-content:center;gap:8px;font:600 1rem var(--bd);min-height:48px;padding:0 24px;border-radius:12px;cursor:pointer;transition:filter .2s,transform .15s,background .2s}
+button.go{background:var(--red);color:var(--on);border:0;box-shadow:0 8px 18px -10px var(--red)}
+button.go:hover{filter:brightness(1.1);transform:translateY(-1px)}
+button.go:active,button.ghost:active{transform:scale(.97)}
+button.ghost{background:transparent;color:var(--hc);border:2px solid color-mix(in srgb,var(--hc) 45%,transparent)}
+button.ghost:hover{background:var(--tint)}
+button svg.ic{width:20px;height:20px;flex:none}
+button.lk{background:none;border:0;color:var(--red);font:600 1rem var(--bd);text-decoration:underline;text-underline-offset:4px;cursor:pointer;min-height:44px;padding:0 4px}
+canvas{width:100%;height:280px;display:block;border-radius:10px}
+.st{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;font-size:.92rem;color:var(--mut)}
+.st span{background:var(--tint);border-radius:999px;padding:4px 14px}
+.st b{font:600 1.1rem var(--hd);color:var(--ink)}
+
+/* home */
+.hero{max-width:760px;margin-bottom:64px}
+.cta{display:flex;flex-wrap:wrap;gap:12px;margin-top:26px}
+.steps{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(176px,1fr));margin:8px 0 52px}
+.sc{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:8px;text-align:left;padding:18px;background:var(--card);border:1px solid var(--grid);border-radius:var(--r);box-shadow:var(--shadow);font:inherit;color:var(--ink);cursor:pointer;transition:transform .2s,border-color .2s}
+.sc:hover{transform:translateY(-3px);border-color:var(--gold)}
+.sc.start{border:2px solid var(--red)}
+.sc .num{display:grid;place-items:center;width:34px;height:34px;border-radius:50%;background:var(--gold);color:#0f172a;font:700 1rem/1 var(--hd)}
+.sc b{font:600 1.1rem var(--hd);color:var(--hc)}
+.sc .d{display:block;font-size:.9rem;line-height:1.5;color:var(--mut)}
+.sc .tag{position:absolute;top:18px;right:16px;font:600 .68rem var(--hd);letter-spacing:.08em;text-transform:uppercase;color:var(--red)}
+
+/* demo coin (home) */
+.cw{display:flex;justify-content:center;perspective:700px;padding:14px 0 22px}
+.coin{width:150px;height:150px;position:relative;transform-style:preserve-3d;transition:transform .7s cubic-bezier(.3,.7,.3,1);cursor:pointer}
+.coin i{position:absolute;inset:0;border-radius:50%;background:var(--gold);border:6px solid var(--hc);display:flex;align-items:center;justify-content:center;font:700 64px var(--hd);color:#0f172a;backface-visibility:hidden;-webkit-backface-visibility:hidden;font-style:normal;box-shadow:0 10px 22px -10px rgba(0,0,0,.4)}
+.coin i+i{transform:rotateY(180deg)}
+.tl{display:flex;gap:28px;margin:6px 0 10px}
+.tl b{display:block;font:700 1.9rem/1.1 var(--hd)}
+.tl span{font-size:.85rem;color:var(--mut)}
+
+/* definitions / cards */
+.def{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));margin-top:26px}
+.def>div{background:var(--card);border:1px solid var(--grid);border-top:4px solid var(--gold);border-radius:12px;padding:16px 18px;box-shadow:var(--shadow)}
+.def b{display:block;font:600 1.1rem var(--hd);color:var(--hc);margin-bottom:4px}
+.def br{display:none}
+.def p{margin:0}
+.def .f{border-top-color:var(--red)}
+.ex{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));margin:14px 0 6px}
+.ex div{background:var(--card);border:1px solid var(--grid);border-radius:12px;padding:12px 16px;box-shadow:var(--shadow)}
+.ex b{font-family:var(--hd);color:var(--hc)}
+.fx{display:inline-flex;flex-wrap:wrap;align-items:center;gap:14px;font:600 1.15rem var(--hd);margin:6px 0 18px;padding:16px 22px;background:var(--card);border:1px solid var(--grid);border-radius:12px}
+.fr{display:inline-flex;flex-direction:column;text-align:center;font-weight:500;font-size:1rem}
+.fr span+span{border-top:2px solid var(--ink);padding-top:2px;margin-top:2px}
+.note{border-left:4px solid var(--gold);background:var(--tint);padding:16px 20px;margin:24px 0;max-width:68ch;border-radius:0 12px 12px 0}
+.note p:last-child{margin-bottom:0}
+ul{max-width:68ch;padding-left:1.2em}li{margin-bottom:.5em}
+.warn{color:var(--hc);font-weight:600}
+
+/* dice */
+.dw{display:flex;justify-content:center;perspective:700px;padding:30px 0 34px}
+.cube{width:90px;height:90px;position:relative;transform-style:preserve-3d;transition:transform .9s cubic-bezier(.25,.7,.3,1);cursor:pointer}
+.fc{position:absolute;inset:0;background:#fff;border:3px solid var(--hc);border-radius:14px;display:grid;grid-template:repeat(3,1fr)/repeat(3,1fr);padding:9px;backface-visibility:hidden;-webkit-backface-visibility:hidden}
+.fc u{width:15px;height:15px;border-radius:50%;background:#1e293b;place-self:center;opacity:0}
+.fc u.p{opacity:1}
+.fc.one u.p{background:var(--red)}
+.fc:nth-child(1){transform:translateZ(45px)}
+.fc:nth-child(2){transform:rotateY(90deg) translateZ(45px)}
+.fc:nth-child(3){transform:rotateX(90deg) translateZ(45px)}
+.fc:nth-child(4){transform:rotateX(-90deg) translateZ(45px)}
+.fc:nth-child(5){transform:rotateY(-90deg) translateZ(45px)}
+.fc:nth-child(6){transform:rotateY(180deg) translateZ(45px)}
+.fcs{display:flex;flex-wrap:wrap;gap:6px 10px;font-size:.9rem;color:var(--mut)}
+.fcs span{background:var(--tint);border-radius:999px;padding:2px 12px}
+.fcs b{color:var(--ink)}
+
+/* tables */
+.tw{overflow-x:auto;border:1px solid var(--grid);border-radius:var(--r);background:var(--card);box-shadow:var(--shadow)}
+table{border-collapse:collapse;width:100%;font-size:.93rem}
+th,td{border-bottom:1px solid var(--grid);padding:10px 12px;text-align:center}
+th{color:var(--hc);font-weight:600;border-bottom:2px solid var(--gold);background:var(--tint)}
+.rt tr:last-child td{border-bottom:0}
+.rt tr:nth-child(even) td{background:color-mix(in srgb,var(--gold) 6%,transparent)}
+.kpis{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));margin:22px 0}
+.kpis div{background:var(--card);border:1px solid var(--grid);border-radius:var(--r);padding:18px;box-shadow:var(--shadow)}
+.kpis b{display:block;font:700 2rem/1.1 var(--hd);color:var(--hc)}
+.kpis span{font-size:.9rem;color:var(--mut)}
+
+/* sample space calculator */
+.cl{display:grid;gap:12px;margin-bottom:6px}
+.cl label{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.cl .lb{min-width:9.5em;font-weight:600}
+.oc{display:flex;flex-wrap:wrap;gap:6px;max-height:300px;overflow-y:auto;padding:2px;margin-top:10px}
+.oc span{font:500 .9rem var(--hd);padding:3px 9px;border:1px solid var(--grid);border-radius:6px;color:var(--mut)}
+.oc span.y,.g6 td.y{background:var(--gold);border-color:var(--hc);color:#0f172a;font-weight:700}
+.g6{width:auto;font:500 .9rem var(--hd);margin-top:10px}
+.g6 th,.g6 td{white-space:nowrap;padding:6px 8px;border:1px solid var(--grid);min-width:2.6em}
+.g6 td{color:var(--mut)}
+ol.sp{max-width:68ch;list-style:none;counter-reset:s;padding:0;margin:18px 0 0}
+ol.sp li{counter-increment:s;position:relative;margin-bottom:1.1em;padding-left:44px}
+ol.sp li::before{content:counter(s);position:absolute;left:0;top:2px;display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--gold);color:#0f172a;font:700 .9rem/1 var(--hd)}
+.big{display:inline-block;margin-top:6px;padding:6px 14px;border-radius:10px;background:var(--tint);font:700 clamp(1.4rem,4vw,1.9rem) var(--hd);color:var(--hc)}
+
+/* bottom nav + finish */
+.pn{display:flex;justify-content:space-between;gap:12px;margin-top:44px;padding-top:24px;border-top:1px solid var(--grid)}
+.fin{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:18px 28px;margin-top:36px}
+.fin p{margin:4px 0 0}
+.fin .row{margin:0}
+
+@media (max-width:520px){main{padding-top:32px}.box{padding:18px}.pn button{flex:1;padding:0 12px}.tl{gap:18px}}
+@media (prefers-reduced-motion:reduce){.coin,.cube,#pb{transition:none}.pg.on{animation:none}.tab,button.go,button.ghost,.sc{transition:none}.sc:hover,button.go:hover{transform:none}}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<div id="top">
+<header id="nv">
+<button class="t" id="logo" type="button" aria-label="Coin and Dice, go to Home">
+<svg viewBox="0 0 30 30" aria-hidden="true"><circle class="c1" cx="15" cy="15" r="13"/><rect class="c2" x="9" y="9" width="12" height="12" rx="3"/><circle class="c3" cx="12.3" cy="12.3" r="1.3"/><circle class="c3" cx="17.7" cy="12.3" r="1.3"/><circle class="c3" cx="12.3" cy="17.7" r="1.3"/><circle class="c3" cx="17.7" cy="17.7" r="1.3"/></svg>
+<span>Coin &amp; Dice</span>
+</button>
+<nav id="tabs" aria-label="Pages"></nav>
+</header>
+<div id="pbw"><i id="pb"></i></div>
+</div>
+<main id="main" tabindex="-1">
+
+<section class="pg" id="home">
+<div class="hero">
+<p class="eyebrow">Probability theory project</p>
+<h1>What happens when you flip a coin 100,000 times?</h1>
+<p class="lead">You can't predict a single coin flip. But flip a coin 100,000 times and heads will come up almost exactly half the time. This site is about why that happens. First you list everything that can happen, then you run simulations with a coin and a die and compare the results with the math.</p>
+<div class="cta">
+<button class="go" data-go="1">Start with sample space <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+<button class="ghost" data-go="2">Skip to the coin</button>
+</div>
+</div>
+
+<h2 style="font-size:clamp(1.6rem,4vw,2.1rem)">What's on the site</h2>
+<div class="steps">
+<button class="sc start" data-go="1"><span class="tag">Start here</span><span class="num">1</span><b>Sample space</b><span class="d">Everything that can happen in an experiment, and how to get a probability by counting. There's a calculator that shows each step.</span></button>
+<button class="sc" data-go="2"><span class="num">2</span><b>Coin</b><span class="d">Flip a coin yourself, then let the computer flip it up to 100,000 times.</span></button>
+<button class="sc" data-go="3"><span class="num">3</span><b>Die</b><span class="d">The same experiment with a die. The average should end up near 3.5.</span></button>
+<button class="sc" data-go="4"><span class="num">4</span><b>Results</b><span class="d">Numbers from a Python simulation with 100,000 trials, plus a few fairness tests.</span></button>
+<button class="sc" data-go="5"><span class="num">5</span><b>Findings</b><span class="d">What the experiments showed and where they fall short.</span></button>
+</div>
+
+<h2 style="font-size:clamp(1.6rem,4vw,2.1rem)">Two ideas to start with</h2>
+<div class="def">
+<div><b>Sample space</b>The list of everything that can happen. For a coin it's {H, T}, for a die {1, 2, 3, 4, 5, 6}. A probability is the number of outcomes you want divided by the number of all outcomes.</div>
+<div><b>Law of large numbers</b>Repeat an experiment many times and the average gets close to the theoretical value: 0.5 for a coin, 3.5 for a die. The typical error is about σ/√n.</div>
+<div class="f"><b>Reference numbers</b>Coin: mean 0.5, σ = 0.5. Die: mean 3.5, variance 35/12 ≈ 2.917, σ ≈ 1.708.</div>
+</div>
+</section>
+
+<section class="pg" id="ss">
+<p class="eyebrow">Step 1 of 5</p>
+<h2>Sample space</h2>
+<p>To say how likely something is, you first need to know what can happen at all. That list is called the sample space. Once you have it, finding a probability comes down to counting.</p>
+
+<div class="def">
+<div><b>Experiment</b><br>Anything where you can't know the result ahead of time: flipping a coin, rolling a die, drawing a card without looking.</div>
+<div><b>Outcome</b><br>One possible result. Rolling a 4 is one outcome.</div>
+<div><b>Sample space S</b><br>The list of all possible outcomes, written in curly brackets. Coin: S = {H, T}. Die: S = {1, 2, 3, 4, 5, 6}.</div>
+<div><b>Event</b><br>The outcomes you care about. "Roll an even number" is the event A = {2, 4, 6}. An event is always part of S.</div>
+</div>
+
+<h3>How to find a probability</h3>
+<p>If every outcome is equally likely, as with a fair coin or a fair die, the probability of an event A is:</p>
+<div class="fx">P(A) = <span class="fr"><span>number of outcomes in A</span><span>number of outcomes in S</span></span></div>
+<p>Example: on a die, A = "even number" = {2, 4, 6}. A has 3 outcomes and S has 6, so P(A) = 3/6 = 1/2. You get an even number half the time.</p>
+<p>A few rules always hold:</p>
+<ul>
+<li>A probability is between 0 and 1. P = 0 means it can't happen (a 7 on one die). P = 1 means it always happens (a number from 1 to 6).</li>
+<li>The probabilities of all outcomes in S add up to 1. Each face of a die has 1/6, and 6 × 1/6 = 1.</li>
+<li>The chance that A doesn't happen is 1 − P(A). Not rolling a 6 is 1 − 1/6 = 5/6.</li>
+</ul>
+
+<h3>More than one coin or die</h3>
+<p>To count the outcomes, multiply. A coin has 2 options and a die has 6, so you multiply the numbers for each one. This is called the multiplication rule.</p>
+<div class="ex">
+<div><b>Two coins</b><br>2 × 2 = 4 outcomes<br>S = {HH, HT, TH, TT}</div>
+<div><b>A coin and a die</b><br>2 × 6 = 12 outcomes<br>S = {(H, 1), (H, 2), …, (T, 6)}</div>
+<div><b>Two dice</b><br>6 × 6 = 36 outcomes<br>S = {(1, 1), (1, 2), …, (6, 6)}</div>
+</div>
+
+<div class="note">
+<p>People often say two coins have three outcomes: two heads, two tails, or one of each. But "one of each" can happen in two ways. The first coin is heads and the second is tails (HT), or the other way round (TH). It helps to picture one gold coin and one silver coin.</p>
+<p>So P(one of each) = 2/4 = 1/2, not 1/3. You can check this in the calculator below: pick 2 coins, "exactly" 1 head, and run 10,000 trials.</p>
+</div>
+
+<h3>Sample space calculator</h3>
+<p class="mut">Choose the number of coins and dice and describe an event. The calculator counts the outcomes step by step.</p>
+<div class="box">
+<div class="cl">
+<label><span class="lb">Coins</span><select id="sc"><option>0</option><option>1</option><option>2</option><option>3</option></select></label>
+<label><span class="lb">Dice</span><select id="sd"><option>0</option><option>1</option><option selected>2</option></select></label>
+<label id="shr"><span class="lb">Number of heads</span><select id="sht"><option value="any">any</option><option value="eq">exactly</option><option value="ge">at least</option><option value="le">at most</option></select><select id="shk"></select></label>
+<label id="sdr"><span class="lb" id="sdl">Sum of the dice</span><select id="sdt"><option value="any">any</option><option value="eq" selected>exactly</option><option value="ge">at least</option><option value="le">at most</option><option value="even">is even</option><option value="odd">is odd</option></select><select id="sdk"></select></label>
+</div>
+<div id="sout" aria-live="polite"></div>
+<div class="row" style="margin-top:18px"><button class="go" id="srun">Run 10,000 trials</button></div>
+<div class="st" id="ssim"></div>
+</div>
+</section>
+
+<section class="pg" id="coinp">
+<p class="eyebrow">Step 2 of 5</p>
+<h2>Coin: law of large numbers</h2>
+<p>Start by flipping the coin yourself. After that, the chart further down shows what happens when the computer flips it thousands of times.</p>
+<div class="box">
+<p class="eyebrow">Flip it yourself</p>
+<div class="cw"><div class="coin" id="hcoin" title="Flip"><i>H</i><i>T</i></div></div>
+<div class="row"><button class="go" id="f1">Flip once</button><button class="go" id="f1k">Flip 1,000 times</button><button class="lk" id="fr">Reset</button></div>
+<div class="tl"><div><b id="th">0</b><span>heads</span></div><div><b id="tt">0</b><span>tails</span></div><div><b id="ts">–</b><span>share of heads</span></div></div>
+<canvas id="hc" style="height:110px"></canvas>
+<p class="mut" style="margin:6px 0 0;font-size:.9rem">The line is your running share of heads. It jumps around at first, then settles near 0.5.</p>
+</div>
+
+<h3>Many flips at once</h3>
+<p>With n = 10 the line jumps around a lot. With 100,000 flips it barely moves.</p>
+<div class="box">
+<div class="row"><label>Number of flips n <select id="cn"><option>10</option><option>100</option><option>1000</option><option selected>10000</option><option>100000</option></select></label>
+<button class="go" id="cb">Flip the coin</button></div>
+<canvas id="cc"></canvas>
+<div class="st" id="cs"></div>
+<p class="mut" style="margin:12px 0 0">The dark line is the running share of heads and the blue dashed line is 0.5. The n axis is logarithmic, so the first few flips take up a lot of room.</p>
+</div>
+</section>
+
+<section class="pg" id="dice">
+<p class="eyebrow">Step 3 of 5</p>
+<h2>Die: law of large numbers</h2>
+<p>Same idea with a die. The running average should end up near 3.5, and each face should come up about one time in six.</p>
+<div class="box">
+<div class="dw"><div class="cube" id="cube" title="Throw"></div></div>
+<div class="row"><button class="go" id="t1">Throw once</button><button class="go" id="t1k">Throw 1,000 times</button><button class="lk" id="tr">Reset</button></div>
+<div class="tl"><div><b id="tn">0</b><span>throws</span></div><div><b id="tl">–</b><span>last result</span></div><div><b id="ta">–</b><span>average (theory 3.5)</span></div></div>
+<div class="fcs" id="tf"></div>
+</div>
+<div class="box">
+<div class="row"><label>Number of rolls n <select id="dn"><option>10</option><option>100</option><option>1000</option><option selected>10000</option><option>100000</option></select></label>
+<button class="go" id="db">Roll the die</button></div>
+<canvas id="dc"></canvas>
+<div class="st" id="ds"></div>
+<canvas id="df" style="height:180px;margin-top:16px"></canvas>
+<p class="mut" style="margin:12px 0 0">The bottom chart shows how often each face came up. The dashed line is 1/6 ≈ 0.167.</p>
+</div>
+</section>
+
+<section class="pg" id="res">
+<p class="eyebrow">Step 4 of 5</p>
+<h2>Simulation results</h2>
+<p class="mut">Python, 100,000 trials, seed 42.</p>
+<div class="kpis">
+<div><b>0.50089</b><span>share of heads after 100,000 flips</span></div>
+<div><b>3.4948</b><span>die average after 100,000 rolls</span></div>
+<div><b>p = 0.83</b><span>fairness test for the die (χ²)</span></div>
+</div>
+<div class="tw"><table class="rt">
+<tr><th>n</th><th>Heads</th><th>Frequency</th><th>|freq − 0.5|</th><th>Die mean</th><th>|mean − 3.5|</th></tr>
+<tr><td>10</td><td>4</td><td>0.4000</td><td>0.1000</td><td>2.900</td><td>0.600</td></tr>
+<tr><td>100</td><td>52</td><td>0.5200</td><td>0.0200</td><td>3.360</td><td>0.140</td></tr>
+<tr><td>1,000</td><td>509</td><td>0.5090</td><td>0.0090</td><td>3.461</td><td>0.039</td></tr>
+<tr><td>10,000</td><td>4939</td><td>0.4939</td><td>0.0061</td><td>3.4996</td><td>0.0004</td></tr>
+<tr><td>100,000</td><td>50089</td><td>0.50089</td><td>0.00089</td><td>3.4948</td><td>0.0052</td></tr>
+</table></div>
+<p style="margin-top:22px">One odd thing: the die average at n = 10,000 (3.4996) is closer to 3.5 than the one at n = 100,000 (3.4948). That's just chance. The law says the error shrinks on average, not every single time.</p>
+<ul style="margin-top:18px">
+<li>Die faces: χ² = 2.14, p = 0.83. Nothing suggests the simulated die is unfair.</li>
+<li>Heads in 20 flips against Bin(20, 0.5): χ² = 20.7 with 14 degrees of freedom, p = 0.11. It fits.</li>
+<li>A coin with p = 0.55: the test missed it with 100 flips (p = 0.11) and caught it with 1,000 (p = 0.011).</li>
+</ul>
+</section>
+
+<section class="pg" id="concl">
+<p class="eyebrow">Step 5 of 5</p>
+<h2>What I found</h2>
+<div class="def">
+<div><b>What happened</b><p>The coin and the die behaved the way the theory says. After 100,000 flips the share of heads was 0.50089. The error shrinks like 1/√n, so to get ten times more accurate you need a hundred times more flips.</p></div>
+<div><b>Where the targets come from</b><p>Both targets come from the sample space. Heads is 1 outcome out of 2, so the share heads toward 1/2. Each die face is 1 out of 6, and the average of 1 to 6 is 21/6 = 3.5.</p></div>
+<div class="f"><b>Limits</b><p>Computer random numbers are pseudo-random, so this only imitates a real coin. One run proves little, so it's worth repeating the experiments. The fairness test also needs enough data: with 100 flips it missed a coin that lands heads 55% of the time.</p></div>
+</div>
+<div class="box fin">
+<div><b class="big">Want to go through it again?</b><p class="mut">Go back to the start, or begin again at the sample space.</p></div>
+<div class="row"><button class="go" data-go="0"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>Back to home</button><button class="ghost" data-go="1">Start again at sample space</button></div>
+</div>
+</section>
+
+<nav class="pn" id="pn" aria-label="Page navigation"><button class="ghost" id="pv" type="button"></button><button class="go" id="nx" type="button"></button></nav>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const fm=(x,d=4)=>x.toFixed(d);
+const PAGES=[['home','Home'],['ss','Sample space'],['coinp','Coin'],['dice','Die'],['res','Results'],['concl','Findings']];
+const PIPS=[[4],[0,8],[0,4,8],[0,2,6,8],[0,2,4,6,8],[0,2,3,5,6,8]];
+const HOME_ICON='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>';
+let cur=0;
+const INIT={ss:()=>{},home:()=>{},coinp:()=>{drawHero();coin()},dice:()=>{dice();showDie($('tl').textContent==='–'?'':$('tl').textContent)}};
+function refresh(){(INIT[PAGES[cur][0]]||(()=>{}))()}
+function show(i){cur=i;
+PAGES.forEach(([id],k)=>$(id).classList.toggle('on',k===i));
+const tabs=document.querySelectorAll('#tabs .tab');
+tabs.forEach((b,k)=>{b.classList.toggle('on',k===i);if(k===i)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current')});
+try{tabs[i].scrollIntoView({inline:'center',block:'nearest'})}catch(e){}
+$('pb').style.width=((i+1)/PAGES.length*100)+'%';
+$('pn').style.display=i?'':'none';
+$('pv').style.visibility=i?'visible':'hidden';
+$('nx').style.display=i<5?'':'none';
+if(i)$('pv').textContent='← '+PAGES[i-1][1];
+if(i<5)$('nx').textContent=PAGES[i+1][1]+' →';
+refresh();scrollTo(0,0)}
+PAGES.forEach(([id,t],k)=>{const b=document.createElement('button');b.type='button';b.className='tab';
+b.innerHTML=(k?'<span class="n">'+k+'</span>':HOME_ICON)+'<span>'+t+'</span>';b.onclick=()=>show(k);$('tabs').appendChild(b)});
+$('logo').onclick=()=>show(0);
+$('pv').onclick=()=>show(cur-1);$('nx').onclick=()=>show(cur+1);
+document.addEventListener('click',e=>{const t=e.target.closest('[data-go]');if(t)show(+t.dataset.go)});
+function setup(c){const r=window.devicePixelRatio||1,w=c.clientWidth,h=c.clientHeight;c.width=w*r;c.height=h*r;
+const g=c.getContext('2d');g.setTransform(r,0,0,r,0,0);g.clearRect(0,0,w,h);return{g,w,h}}
+const PAD={l:44,r:12,t:10,b:26};
+function axes(g,w,h,x0,x1,y0,y1,xlog,xt){
+g.strokeStyle=css('--grid');g.fillStyle=css('--mut');g.font='11px system-ui';g.lineWidth=1;
+const X=x=>PAD.l+((xlog?Math.log10(x)-Math.log10(x0):x-x0)/(xlog?Math.log10(x1)-Math.log10(x0):x1-x0))*(w-PAD.l-PAD.r);
+const Y=y=>h-PAD.b-((y-y0)/(y1-y0))*(h-PAD.t-PAD.b);
+for(let i=0;i<=4;i++){const v=y0+(y1-y0)*i/4;g.beginPath();g.moveTo(PAD.l,Y(v));g.lineTo(w-PAD.r,Y(v));g.stroke();g.textAlign='right';g.fillText(fm(v,2),PAD.l-4,Y(v)+4)}
+g.textAlign='center';xt.forEach(t=>g.fillText(t>=1000?(t/1000)+'k':t,X(t),h-8));
+return{X,Y}}
+function line(g,pts,col,wd){g.strokeStyle=col;g.lineWidth=wd||1.5;g.lineJoin='round';g.beginPath();pts.forEach((p,i)=>i?g.lineTo(p[0],p[1]):g.moveTo(p[0],p[1]));g.stroke()}
+function runPlot(cv,n,gen,ref,y0,y1){
+const {g,w,h}=setup(cv);const ticks=[1,10,100,1000,10000,100000].filter(t=>t<=n);
+const {X,Y}=axes(g,w,h,1,Math.max(n,10),y0,y1,true,ticks);
+const idx=new Set();for(let i=0;i<=240;i++)idx.add(Math.max(1,Math.round(Math.pow(Math.max(n,10),i/240))));
+let s=0;const pts=[];const arr=new Array(n);
+for(let i=1;i<=n;i++){const v=gen();arr[i-1]=v;s+=v;if(idx.has(i))pts.push([X(i),Y(Math.min(y1,Math.max(y0,s/i)))])}
+g.setLineDash([6,4]);line(g,[[PAD.l,Y(ref)],[w-PAD.r,Y(ref)]],css('--red'),2);g.setLineDash([]);
+line(g,pts,css('--ink'),2);return{arr,s}}
+function coin(){const n=+$('cn').value;
+const {s}=runPlot($('cc'),n,()=>Math.random()<0.5?1:0,0.5,0.2,0.8);
+const f=s/n;$('cs').innerHTML=`<span>Heads <b>${s}</b></span><span>Frequency <b>${fm(f,5)}</b></span><span>|freq − 0.5| <b>${fm(Math.abs(f-.5),5)}</b></span><span>Typical error 0.5/√n <b>${fm(.5/Math.sqrt(n),5)}</b></span>`}
+function dice(){const n=+$('dn').value;
+const {arr,s}=runPlot($('dc'),n,()=>1+Math.floor(Math.random()*6),3.5,2,5);
+const m=s/n;$('ds').innerHTML=`<span>Average <b>${fm(m)}</b></span><span>|mean − 3.5| <b>${fm(Math.abs(m-3.5))}</b></span><span>Typical error σ/√n <b>${fm(1.7078/Math.sqrt(n))}</b></span>`;
+const cnt=[0,0,0,0,0,0];arr.forEach(v=>cnt[v-1]++);
+const {g,w,h}=setup($('df'));const mx=Math.max(0.25,...cnt.map(c=>c/n))*1.05;
+const {X,Y}=axes(g,w,h,0.5,6.5,0,mx,false,[1,2,3,4,5,6]);
+const bw=(X(2)-X(1))*0.6;
+cnt.forEach((c,i)=>{g.fillStyle=css('--gold');g.strokeStyle=css('--ink');g.lineWidth=2;g.fillRect(X(i+1)-bw/2,Y(c/n),bw,Y(0)-Y(c/n));g.strokeRect(X(i+1)-bw/2,Y(c/n),bw,Y(0)-Y(c/n))});
+g.setLineDash([6,4]);line(g,[[PAD.l,Y(1/6)],[w-PAD.r,Y(1/6)]],css('--red'),2);g.setLineDash([])}
+/* hero coin */
+let H=0,T=0,seq=[],ang=0;
+function flipOnce(anim){const heads=Math.random()<.5;heads?H++:T++;
+if(anim){ang=(Math.floor(ang/360)+2)*360+(heads?0:180);$("hcoin").style.transform=`rotateY(${ang}deg)`}
+seq.push(H/(H+T))}
+function drawHero(){$('th').textContent=H;$('tt').textContent=T;$('ts').textContent=H+T?fm(H/(H+T),3):'–';
+const {g,w,h}=setup($('hc'));const y0=.1,y1=.9,Y=y=>h-6-((Math.min(y1,Math.max(y0,y))-y0)/(y1-y0))*(h-12);
+g.setLineDash([6,4]);line(g,[[0,Y(.5)],[w,Y(.5)]],css('--red'),2);g.setLineDash([]);
+if(seq.length>1)line(g,seq.map((v,i)=>[i/(seq.length-1)*w,Y(v)]),css('--ink'),2)}
+$('f1').onclick=()=>{flipOnce(true);drawHero()};
+$("hcoin").onclick=$('f1').onclick;
+$('f1k').onclick=()=>{for(let i=0;i<1000;i++){flipOnce(false);}seq=seq.filter((_,i)=>i%(seq.length>600?Math.ceil(seq.length/600):1)===0);drawHero()};
+$('fr').onclick=()=>{H=T=0;seq=[];ang=0;$("hcoin").style.transform='rotateY(0deg)';drawHero()};
+/* die throw */
+const FACE_ORDER=[1,2,3,4,5,6];
+$('cube').innerHTML=FACE_ORDER.map(k=>`<div class="fc${k===1?' one':''}">${[0,1,2,3,4,5,6,7,8].map(i=>`<u${PIPS[k-1].includes(i)?' class="p"':''}></u>`).join('')}</div>`).join('');
+const TGT={1:[0,0],2:[0,-90],3:[-90,0],4:[90,0],5:[0,90],6:[0,180]};
+let DN=0,DS=0,DC=[0,0,0,0,0,0],cx=0,cy=0;
+function throwOnce(anim){const v=1+Math.floor(Math.random()*6);DN++;DS+=v;DC[v-1]++;
+if(anim){cx=(Math.floor(cx/360)+2)*360+TGT[v][0];cy=(Math.floor(cy/360)+2)*360+TGT[v][1];$('cube').style.transform=`rotateX(${cx}deg) rotateY(${cy}deg)`}
+return v}
+function showDie(last){$('tn').textContent=DN;$('tl').textContent=last||(DN?'–':'–');$('ta').textContent=DN?fm(DS/DN,3):'–';
+$('tf').innerHTML=DC.map((c,i)=>`<span>${i+1}: <b>${c}</b></span>`).join('')}
+$('t1').onclick=()=>{const v=throwOnce(true);showDie(v)};
+$('cube').onclick=$('t1').onclick;
+$('t1k').onclick=()=>{let v;for(let i=0;i<1000;i++)v=throwOnce(false);showDie(v)};
+$('tr').onclick=()=>{DN=DS=0;DC=[0,0,0,0,0,0];cx=cy=0;$('cube').style.transform='rotateX(0deg) rotateY(0deg)';showDie()};
+$('cb').onclick=coin;$('db').onclick=dice;
+['cn','dn'].forEach((id,i)=>$(id).onchange=[coin,dice][i]);
+let rt,lw=innerWidth;addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(()=>{if(innerWidth!==lw){lw=innerWidth;refresh()}},200)});
+matchMedia('(prefers-color-scheme:dark)').addEventListener('change',refresh);
+/* sample space calculator */
+const gcd=(a,b)=>b?gcd(b,a%b):a;
+const frac=(a,b)=>{if(a===0)return'0';if(a===b)return'1';const g=gcd(a,b);return g>1?`${a}/${b} = ${a/g}/${b/g}`:`${a}/${b}`};
+const fracS=(a,b)=>{if(a===0)return'0';if(a===b)return'1';const g=gcd(a,b);return `${a/g}/${b/g}`};
+const pct=x=>+(x*100).toFixed(2)+'%';
+const nf=n=>n.toLocaleString('en-US');
+const OK={any:()=>true,eq:(v,k)=>v===k,ge:(v,k)=>v>=k,le:(v,k)=>v<=k,even:v=>v%2===0,odd:v=>v%2===1};
+const WORD={eq:'exactly',ge:'at least',le:'at most'};
+function fillK(sel,lo,hi,def){const old=sel.value===''?def:+sel.value;sel.innerHTML='';
+for(let k=lo;k<=hi;k++)sel.add(new Option(k,k));sel.value=Math.min(hi,Math.max(lo,old))}
+function ssCfg(){const nc=+$('sc').value,nd=+$('sd').value;
+return{nc,nd,ht:$('sht').value,hk:+$('shk').value,dt:$('sdt').value,dk:+$('sdk').value}}
+function ssTest(c,heads,sum){return(c.nc===0||OK[c.ht](heads,c.hk))&&(c.nd===0||OK[c.dt](sum,c.dk))}
+function ssLabel(c,coins,dice){
+if(c.nd===0)return coins.join('');
+const parts=coins.concat(dice);return parts.length===1?String(parts[0]):'('+parts.join(', ')+')'}
+function ssEventWords(c){const w=[];
+if(c.nc&&c.ht!=='any')w.push(`the number of heads is ${WORD[c.ht]} ${c.hk}`);
+if(c.nd&&c.dt!=='any'){const subj=c.nd===1?'the die shows':'the sum of the dice is';
+w.push(c.dt==='even'?`${subj} an even number`:c.dt==='odd'?`${subj} an odd number`:`${subj} ${WORD[c.dt]} ${c.dk}`)}
+return w}
+function ssSync(){const nc=+$('sc').value,nd=+$('sd').value;
+$('shr').style.display=nc?'':'none';$('sdr').style.display=nd?'':'none';
+$('sdl').textContent=nd===1?'Die shows':'Sum of the dice';
+fillK($('shk'),0,nc,1);fillK($('sdk'),nd,6*nd,nd===2?7:nd);
+$('shk').style.display=$('sht').value==='any'?'none':'';
+$('sdk').style.display=['any','even','odd'].includes($('sdt').value)?'none':'';
+ssCalc()}
+function ssCalc(){const c=ssCfg();$('ssim').innerHTML='';
+if(!c.nc&&!c.nd){$('sout').innerHTML='<p class="warn" style="margin:16px 0 0">Pick at least one coin or one die.</p>';$('srun').style.display='none';return}
+$('srun').style.display='';
+const all=[],nC=1<<c.nc,nD=6**c.nd;
+for(let a=0;a<nC;a++)for(let d=0;d<nD;d++){
+const coins=[];for(let i=c.nc-1;i>=0;i--)coins.push((a>>i)&1?'T':'H');
+const dice=[];let r=d;for(let i=0;i<c.nd;i++){dice.unshift(1+r%6);r=Math.floor(r/6)}
+const heads=coins.filter(x=>x==='H').length,sum=dice.reduce((x,y)=>x+y,0);
+all.push({coins,dice,heads,sum,y:ssTest(c,heads,sum),t:ssLabel(c,coins,dice)})}
+const N=all.length,fav=all.filter(o=>o.y),F=fav.length;
+const factors=Array(c.nc).fill(2).concat(Array(c.nd).fill(6));
+const what=[c.nc?`${c.nc} coin${c.nc>1?'s':''}`:'',c.nd?`${c.nd} di${c.nd>1?'ce':'e'}`:''].filter(Boolean).join(' and ');
+const per=[c.nc?'a coin can land 2 ways (H or T)':'',c.nd?'a die can land 6 ways (1 to 6)':''].filter(Boolean).join(', ');
+const step2=factors.length===1?`There is only one object, so S has ${N} outcomes.`:
+`Multiply the ways: ${factors.join(' × ')} = ${N}. So S has ${N} outcomes.`;
+let view;
+if(c.nc===0&&c.nd===2){view='<div class="tw"><table class="g6"><tr><th>1st \\ 2nd</th>'+[1,2,3,4,5,6].map(j=>`<th>${j}</th>`).join('')+'</tr>'+
+[1,2,3,4,5,6].map(i=>`<tr><th>${i}</th>`+[1,2,3,4,5,6].map(j=>{const o=all[(i-1)*6+(j-1)];return `<td class="${o.y?'y':''}" title="sum ${i+j}">${i},${j}</td>`}).join('')+'</tr>').join('')+'</table></div>'}
+else view='<div class="oc">'+all.map(o=>`<span class="${o.y?'y':''}">${o.t}</span>`).join('')+'</div>';
+const ew=ssEventWords(c);
+const evText=ew.length?`A = "${ew.join(' and ')}".`:"You didn't set a condition, so every outcome counts: A = S.";
+const setText=F===0?'A = { } (empty).':F<=12?`A = {${fav.map(o=>o.t).join(', ')}}.`:'';
+const p=F/N;
+let step5=`P(A) = <span class="fr" style="vertical-align:middle;display:inline-flex"><span>${F}</span><span>${N}</span></span> ${F&&F!==N&&gcd(F,N)>1?`= ${fracS(F,N)}`:''}`;
+$('sout').innerHTML=`<ol class="sp">
+<li>Ways for each object. You have ${what}: ${per}.</li>
+<li>Size of S. ${step2}</li>
+<li>Write out S. ${c.nc===0&&c.nd===2?'Rows are the first die, columns the second. ':''}Outcomes in your event are highlighted.${view}</li>
+<li>Outcomes in your event. ${evText} ${setText} That makes ${F} outcome${F===1?'':'s'}.</li>
+<li>Divide. ${step5}<br><span class="big">P(A) = ${fracS(F,N)} ≈ ${p.toFixed(4)} (${pct(p)})</span>
+${F===0?'<br>The event is impossible.':F===N?'<br>The event is certain.':''}</li>
+<li>The opposite event. P(not A) = 1 − ${fracS(F,N)} = ${fracS(N-F,N)} ≈ ${pct(1-p)}.</li>
+</ol>`}
+$('srun').onclick=()=>{const c=ssCfg(),R=10000;let hit=0;
+for(let r=0;r<R;r++){let h=0,s=0;for(let i=0;i<c.nc;i++)if(Math.random()<.5)h++;for(let i=0;i<c.nd;i++)s+=1+Math.floor(Math.random()*6);if(ssTest(c,h,s))hit++}
+let N=(1<<c.nc)*6**c.nd,F=0;
+for(let a=0;a<(1<<c.nc);a++)for(let d=0;d<6**c.nd;d++){let h=0,r=d,s=0;for(let i=0;i<c.nc;i++)if(!((a>>i)&1))h++;for(let i=0;i<c.nd;i++){s+=1+r%6;r=Math.floor(r/6)}if(ssTest(c,h,s))F++}
+$('ssim').innerHTML=`<span>Event happened <b>${nf(hit)}</b> times out of ${nf(R)}</span><span>Frequency <b>${(hit/R).toFixed(4)}</b></span><span>Theory <b>${(F/N).toFixed(4)}</b></span><span>Difference <b>${Math.abs(hit/R-F/N).toFixed(4)}</b></span>`};
+['sc','sd','sht','sdt'].forEach(id=>$(id).onchange=ssSync);
+['shk','sdk'].forEach(id=>$(id).onchange=ssCalc);
+ssSync();
+show(0);
+</script>
+</body>
+</html>
