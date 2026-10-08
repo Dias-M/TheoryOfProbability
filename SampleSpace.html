@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en"> 
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -158,6 +158,8 @@ ol.sp li::before{content:counter(s);position:absolute;left:0;top:2px;display:gri
 .fin{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:18px 28px;margin-top:36px}
 .fin p{margin:4px 0 0}
 .fin .row{margin:0}
+.credit{margin:40px 0 0;max-width:none;color:var(--mut);font-size:.95rem;line-height:1.5}
+.credit b{display:block;font:600 1.1rem var(--hd);color:var(--hc)}
 
 @media (max-width:520px){main{padding-top:32px}.box{padding:18px}.pn button{flex:1;padding:0 12px}.tl{gap:18px}}
 @media (prefers-reduced-motion:reduce){.coin,.cube,#pb{transition:none}.pg.on{animation:none}.tab,button.go,button.ghost,.sc{transition:none}.sc:hover,button.go:hover{transform:none}}
@@ -336,6 +338,7 @@ ol.sp li::before{content:counter(s);position:absolute;left:0;top:2px;display:gri
 <div><b class="big">Want to go through it again?</b><p class="mut">Go back to the start, or begin again at the sample space.</p></div>
 <div class="row"><button class="go" data-go="0"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>Back to home</button><button class="ghost" data-go="1">Start again at sample space</button></div>
 </div>
+<p class="credit"><b>Moldassanov Dias</b>Narxoz University</p>
 </section>
 
 <nav class="pn" id="pn" aria-label="Page navigation"><button class="ghost" id="pv" type="button"></button><button class="go" id="nx" type="button"></button></nav>
